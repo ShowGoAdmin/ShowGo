@@ -27,22 +27,28 @@ async function deleteChatMessages() {
   try {
     const messagesCollectionId = process.env.CHAT_MESSAGES_COLLECTION_ID;
     const groupsCollectionId = process.env.GROUPS_COLLECTION_ID;
+    const databaseId = process.env.DATABASE_ID
 
     if (!messagesCollectionId || !groupsCollectionId) {
       throw new Error('Missing collection IDs in environment variables');
     }
 
-    const messages = await database.listDocuments(messagesCollectionId);
+    const messages = await database.listDocuments(databaseId,messagesCollectionId);
 
     for (let message of messages.documents) {
       const groupId = message.groupsId;
 
-      const groupExists = await database.listDocuments(groupsCollectionId, [
+      const groupExists = await database.listDocuments(
+        databaseId,
+        groupsCollectionId, [
         sdk.Query.equal('$id', groupId),
       ]);
 
       if (groupExists.documents.length === 0) {
-        await database.deleteDocument(messagesCollectionId, message.$id);
+        await database.deleteDocument(
+          databaseId,
+          messagesCollectionId, 
+          message.$id);
         console.log(`Deleted message with ID: ${message.$id}`);
       }
     }
@@ -56,12 +62,15 @@ async function deleteExpiredInstantSaleTickets() {
   try {
     const ticketsForInstantSaleCollectionId = process.env.TICKETS_FOR_INSTANT_SALE_COLLECTION_ID;
     const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
+    const databaseId = process.env.DATABASE_ID
 
     if (!ticketsForInstantSaleCollectionId || !ticketsCollectionId) {
       throw new Error('Missing collection IDs in environment variables');
     }
 
-    const tickets = await database.listDocuments(ticketsForInstantSaleCollectionId);
+    const tickets = await database.listDocuments(
+      databaseId,
+      ticketsForInstantSaleCollectionId);
 
     for (let ticket of tickets.documents) {
       const expiryDateStr = ticket.expiry;
@@ -75,17 +84,27 @@ async function deleteExpiredInstantSaleTickets() {
         const originalTicketId = ticket.ticketId;
         const listingQuantity = ticket.quantity;
 
-        const originalTicket = await database.getDocument(ticketsCollectionId, originalTicketId);
+        const originalTicket = await database.getDocument(
+          databaseId,
+          ticketsCollectionId, 
+          originalTicketId);
 
         const updatedQuantity = originalTicket.quantity + listingQuantity;
-        await database.updateDocument(ticketsCollectionId, originalTicketId, {
+        await database.updateDocument(
+          databaseId,
+          ticketsCollectionId, 
+          originalTicketId, {
           quantity: updatedQuantity,
           isListedForSale: false,
         });
 
         console.log(`Updated original ticket with ID: ${originalTicketId}, new quantity: ${updatedQuantity}`);
 
-        await database.deleteDocument(ticketsForInstantSaleCollectionId, ticket.$id);
+        await database.deleteDocument(
+          databaseId,
+          ticketsForInstantSaleCollectionId, 
+          ticket.$id
+        );
         console.log(`Deleted expired instant sale ticket with ID: ${ticket.$id}`);
       }
     }
@@ -99,12 +118,16 @@ async function moveExpiredTickets() {
   try {
     const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
     const expiredTicketsCollectionId = process.env.EXPIRED_TICKETS_COLLECTION_ID;
+    const databaseId = process.env.DATABASE_ID
 
     if (!ticketsCollectionId || !expiredTicketsCollectionId) {
       throw new Error('Missing collection IDs in environment variables');
     }
 
-    const tickets = await database.listDocuments(ticketsCollectionId);
+    const tickets = await database.listDocuments(
+      databaseId,
+      ticketsCollectionId
+    );
 
     for (let ticket of tickets.documents) {
       const eventDateStr = ticket.eventDate;
@@ -112,8 +135,16 @@ async function moveExpiredTickets() {
       const currentDate = new Date();
 
       if (eventDate < currentDate) {
-        await database.createDocument(expiredTicketsCollectionId, ticket);
-        await database.deleteDocument(ticketsCollectionId, ticket.$id);
+        await database.createDocument(
+          databaseId,
+          expiredTicketsCollectionId, 
+          ticket
+        );
+        await database.deleteDocument(
+          databaseId,
+          ticketsCollectionId, 
+          ticket.$id
+        );
         console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets.`);
       }
     }
