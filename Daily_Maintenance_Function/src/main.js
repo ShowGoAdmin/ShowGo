@@ -1,5 +1,6 @@
 import { Client } from 'node-appwrite';
-import {Databases} from 'node-appwrite'
+import {Databases} from 'node-appwrite';
+ 
 
 // Initialize Appwrite Client
 const client = new Client();
@@ -41,7 +42,7 @@ async function deleteChatMessages() {
       const groupExists = await database.listDocuments(
         databaseId,
         groupsCollectionId, [
-        sdk.Query.equal('$id', groupId),
+        Query.equal('$id', groupId),
       ]);
 
       if (groupExists.documents.length === 0) {
