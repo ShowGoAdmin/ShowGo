@@ -134,6 +134,8 @@ async function moveExpiredTickets() {
       const eventDate = new Date(eventDateStr);
       const currentDate = new Date();
 
+      console.log(`Ticket Data :${ticket}`)
+
       if (eventDate < currentDate) {
         await database.createDocument(
           databaseId,
