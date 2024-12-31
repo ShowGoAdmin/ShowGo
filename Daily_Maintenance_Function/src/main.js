@@ -1,4 +1,4 @@
-const sdk = require('node-appwrite');
+import sdk from 'node-appwrite';
 
 // Initialize Appwrite SDK using environment variables
 const client = new sdk.Client();
@@ -11,7 +11,7 @@ const messagesCollectionId = process.env.CHAT_MESSAGES_COLLECTION_ID; // Chat me
 const groupsCollectionId = process.env.GROUPS_COLLECTION_ID; // Groups collection ID from env
 const ticketsForInstantSaleCollectionId = process.env.TICKETS_FOR_INSTANT_SALE_COLLECTION_ID
 const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID
-const expiredTicketsCollectionId = process.env.EXPIRED_TICKETS_COLLECTION_ID
+const expiredTicketsCollectionId = process.env.EXPIRED_TICKETS_COLLECTION_ID;
 
 async function deleteChatMessages() {
   try {
@@ -64,8 +64,6 @@ async function deleteExpiredInstantSaleTickets() {
           quantity: updatedQuantity,
           isListedForSale: false
         });
-
-        //send listing expiration mail to user
 
         console.log(`Updated original ticket with ID: ${originalTicketId}, new quantity: ${updatedQuantity}`);
 
