@@ -13,7 +13,7 @@ if (!client) {
   throw new Error("Appwrite Client is not initialized");
 }
 
-const database = client.database;
+const database = new sdk.Databases(client);
 
 // Ensure database is initialized
 if (!database) {
