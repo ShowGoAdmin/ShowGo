@@ -1,7 +1,9 @@
 import { Client } from 'node-appwrite';
 
 // Initialize Appwrite Client
+const sdk = require('node-appwrite');
 const client = new Client();
+
 
 client
   .setEndpoint(process.env.APPWRITE_ENDPOINT) // Appwrite endpoint
