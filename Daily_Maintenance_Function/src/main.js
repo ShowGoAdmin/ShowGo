@@ -1,22 +1,22 @@
 import { Client } from 'node-appwrite';
+import {Databases} from 'node-appwrite'
 
 // Initialize Appwrite Client
-const sdk = require('node-appwrite');
 const client = new Client();
 
 
 client
-  .setEndpoint(process.env.APPWRITE_ENDPOINT) // Appwrite endpoint
-  .setProject(process.env.APPWRITE_PROJECT_ID) // Project ID
-  .setKey(process.env.APPWRITE_API_KEY); // API Key
+.setEndpoint(process.env.APPWRITE_ENDPOINT) // Appwrite endpoint
+.setProject(process.env.APPWRITE_PROJECT_ID) // Project ID
+.setKey(process.env.APPWRITE_API_KEY); // API Key
 
 // Ensure that the client is initialized
 if (!client) {
   throw new Error("Appwrite Client is not initialized");
 }
 
-const database = new sdk.Databases(client);
 
+const database = new Databases(client);
 // Ensure database is initialized
 if (!database) {
   throw new Error("Appwrite Database is not initialized");
