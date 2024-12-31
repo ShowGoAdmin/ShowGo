@@ -2,18 +2,33 @@ import { Client } from 'node-appwrite';
 
 // Initialize Appwrite Client
 const client = new Client();
+
 client
   .setEndpoint(process.env.APPWRITE_ENDPOINT) // Appwrite endpoint
   .setProject(process.env.APPWRITE_PROJECT_ID) // Project ID
   .setKey(process.env.APPWRITE_API_KEY); // API Key
 
+// Ensure that the client is initialized
+if (!client) {
+  throw new Error("Appwrite Client is not initialized");
+}
+
 const database = client.database;
+
+// Ensure database is initialized
+if (!database) {
+  throw new Error("Appwrite Database is not initialized");
+}
 
 // Your Appwrite function to delete expired chat messages
 async function deleteChatMessages() {
   try {
     const messagesCollectionId = process.env.CHAT_MESSAGES_COLLECTION_ID;
     const groupsCollectionId = process.env.GROUPS_COLLECTION_ID;
+
+    if (!messagesCollectionId || !groupsCollectionId) {
+      throw new Error('Missing collection IDs in environment variables');
+    }
 
     const messages = await database.listDocuments(messagesCollectionId);
 
@@ -39,6 +54,10 @@ async function deleteExpiredInstantSaleTickets() {
   try {
     const ticketsForInstantSaleCollectionId = process.env.TICKETS_FOR_INSTANT_SALE_COLLECTION_ID;
     const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
+
+    if (!ticketsForInstantSaleCollectionId || !ticketsCollectionId) {
+      throw new Error('Missing collection IDs in environment variables');
+    }
 
     const tickets = await database.listDocuments(ticketsForInstantSaleCollectionId);
 
@@ -78,6 +97,10 @@ async function moveExpiredTickets() {
   try {
     const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
     const expiredTicketsCollectionId = process.env.EXPIRED_TICKETS_COLLECTION_ID;
+
+    if (!ticketsCollectionId || !expiredTicketsCollectionId) {
+      throw new Error('Missing collection IDs in environment variables');
+    }
 
     const tickets = await database.listDocuments(ticketsCollectionId);
 
