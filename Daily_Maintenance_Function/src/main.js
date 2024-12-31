@@ -1,33 +1,29 @@
-import sdk from 'node-appwrite';
+import { Client } from 'node-appwrite';
 
-// Initialize Appwrite SDK using environment variables
-const client = new sdk.Client();
-client.setEndpoint(process.env.APPWRITE_ENDPOINT)  // Appwrite endpoint
-      .setProject(process.env.APPWRITE_PROJECT_ID)  // Project ID
-      .setKey(process.env.APPWRITE_API_KEY);  // API Key
+// Initialize Appwrite Client
+const client = new Client();
+client
+  .setEndpoint(process.env.APPWRITE_ENDPOINT) // Appwrite endpoint
+  .setProject(process.env.APPWRITE_PROJECT_ID) // Project ID
+  .setKey(process.env.APPWRITE_API_KEY); // API Key
 
-const database = new sdk.Databases(client);
-const messagesCollectionId = process.env.CHAT_MESSAGES_COLLECTION_ID; // Chat messages collection ID from env
-const groupsCollectionId = process.env.GROUPS_COLLECTION_ID; // Groups collection ID from env
-const ticketsForInstantSaleCollectionId = process.env.TICKETS_FOR_INSTANT_SALE_COLLECTION_ID
-const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID
-const expiredTicketsCollectionId = process.env.EXPIRED_TICKETS_COLLECTION_ID;
+const database = client.database;
 
+// Your Appwrite function to delete expired chat messages
 async function deleteChatMessages() {
   try {
-    // Fetch all messages from the chat messages collection
+    const messagesCollectionId = process.env.CHAT_MESSAGES_COLLECTION_ID;
+    const groupsCollectionId = process.env.GROUPS_COLLECTION_ID;
+
     const messages = await database.listDocuments(messagesCollectionId);
 
     for (let message of messages.documents) {
-      // Get the group ID from the message
       const groupId = message.groupsId;
 
-      // Check if the group exists in the groups collection by querying with groupId
       const groupExists = await database.listDocuments(groupsCollectionId, [
-        sdk.Query.equal('$id', groupId) // Check if the document ID (groupId) matches
+        sdk.Query.equal('$id', groupId),
       ]);
 
-      // If the group does not exist, delete the message
       if (groupExists.documents.length === 0) {
         await database.deleteDocument(messagesCollectionId, message.$id);
         console.log(`Deleted message with ID: ${message.$id}`);
@@ -38,36 +34,36 @@ async function deleteChatMessages() {
   }
 }
 
+// Your Appwrite function to delete expired instant sale tickets
 async function deleteExpiredInstantSaleTickets() {
   try {
-    // Fetch all instant sale tickets from the tickets collection
+    const ticketsForInstantSaleCollectionId = process.env.TICKETS_FOR_INSTANT_SALE_COLLECTION_ID;
+    const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
+
     const tickets = await database.listDocuments(ticketsForInstantSaleCollectionId);
 
     for (let ticket of tickets.documents) {
-      const expiryDateStr = ticket.expiry; // Assuming expiryDate is in 'DD/MM/YYYY' format
+      const expiryDateStr = ticket.expiry;
       const expiryDateParts = expiryDateStr.split('/');
-      const expiryDate = new Date(`${expiryDateParts[1]}/${expiryDateParts[0]}/${expiryDateParts[2]}`);
+      const expiryDate = new Date(
+        `${expiryDateParts[1]}/${expiryDateParts[0]}/${expiryDateParts[2]}`
+      );
       const currentDate = new Date();
 
-      // Check if the ticket has expired
       if (expiryDate < currentDate) {
-        // Update the original ticket's quantity and mark it as not listed
-        const originalTicketId = ticket.ticketId; // Assuming you have an 'originalTicketId' field to link the original ticket
+        const originalTicketId = ticket.ticketId;
         const listingQuantity = ticket.quantity;
 
-        // Fetch the original ticket
         const originalTicket = await database.getDocument(ticketsCollectionId, originalTicketId);
 
-        // Update the quantity of the original ticket and mark as not listed
         const updatedQuantity = originalTicket.quantity + listingQuantity;
         await database.updateDocument(ticketsCollectionId, originalTicketId, {
           quantity: updatedQuantity,
-          isListedForSale: false
+          isListedForSale: false,
         });
 
         console.log(`Updated original ticket with ID: ${originalTicketId}, new quantity: ${updatedQuantity}`);
 
-        // Delete the expired instant sale ticket from the tickets collection
         await database.deleteDocument(ticketsForInstantSaleCollectionId, ticket.$id);
         console.log(`Deleted expired instant sale ticket with ID: ${ticket.$id}`);
       }
@@ -77,22 +73,21 @@ async function deleteExpiredInstantSaleTickets() {
   }
 }
 
+// Your Appwrite function to move expired tickets
 async function moveExpiredTickets() {
   try {
-    // Fetch all tickets from the tickets collection
+    const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
+    const expiredTicketsCollectionId = process.env.EXPIRED_TICKETS_COLLECTION_ID;
+
     const tickets = await database.listDocuments(ticketsCollectionId);
 
     for (let ticket of tickets.documents) {
-      const eventDateStr = ticket.eventDate; // Assuming eventDate is a string in the format "Month Day, Year" (e.g., "June 5, 2024")
-      const eventDate = new Date(eventDateStr); // Parse the date string into a Date object
+      const eventDateStr = ticket.eventDate;
+      const eventDate = new Date(eventDateStr);
       const currentDate = new Date();
 
-      // Check if the event date has passed
       if (eventDate < currentDate) {
-        // Move the expired ticket to the expired tickets collection
         await database.createDocument(expiredTicketsCollectionId, ticket);
-
-        // Delete the expired ticket from the tickets collection
         await database.deleteDocument(ticketsCollectionId, ticket.$id);
         console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets.`);
       }
@@ -102,12 +97,26 @@ async function moveExpiredTickets() {
   }
 }
 
-// Call all the functions
-async function performScheduledTasks() {
-  await deleteChatMessages();
-  await moveExpiredTickets();
-  await deleteExpiredInstantSaleTickets();
-}
+// Main function for Appwrite execution
+export default async ({ req, res, log, error }) => {
+  try {
+    log('Executing scheduled tasks...');
 
-// Run the tasks
-performScheduledTasks();
+    // Call your functions
+    await deleteChatMessages();
+    await moveExpiredTickets();
+    await deleteExpiredInstantSaleTickets();
+
+    // Send success response
+    return res.json({
+      message: 'Scheduled tasks completed successfully.',
+    });
+  } catch (err) {
+    // Log and handle any errors
+    error('Error executing tasks: ', err);
+    return res.status(500).json({
+      error: 'Error executing scheduled tasks.',
+      details: err.message,
+    });
+  }
+};
