@@ -1,6 +1,7 @@
 import { Client } from 'node-appwrite';
 import { Databases } from 'node-appwrite';
-import { Query } from 'node-appwrite'
+import { Query } from 'node-appwrite';
+import { ID } from 'node-appwrite';
  
 
 // Initialize Appwrite Client
@@ -84,8 +85,7 @@ async function deleteExpiredInstantSaleTickets() {
       const currentDate = new Date();
 
       if (expiryDate < currentDate) {
-        const originalTicketId = ticket.ticketId;
-        const listingQuantity = parseInt(ticket.quantity, 10); //convert this string number quantity to integer type 
+        const originalTicketId = ticket.ticketId;        const listingQuantity = parseInt(ticket.quantity, 10); //convert this string number quantity to integer type 
 
 
         const originalTicket = await database.getDocument(
@@ -159,7 +159,12 @@ async function moveExpiredTickets() {
 
         console.log('Creating document with data:', documentData);
 
-        await database.createDocument(databaseId, expiredTicketsCollectionId, documentData);
+        await database.createDocument(
+          databaseId, 
+          expiredTicketsCollectionId, 
+          ID.unique(),
+          documentData
+        );
         await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
 
         console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets collection.`);
