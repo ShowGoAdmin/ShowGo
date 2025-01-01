@@ -100,7 +100,7 @@ async function deleteExpiredInstantSaleTickets() {
           ticketsCollectionId, 
           originalTicketId, 
           {
-            quantity: updatedQuantity,
+            quantity: updatedQuantity.toString(),
             isListedForSale: "false",
           }
       );
