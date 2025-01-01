@@ -144,7 +144,7 @@ async function moveExpiredTickets() {
         await database.createDocument(
           databaseId,
           expiredTicketsCollectionId, 
-          {
+          data = {
             eventName: ticket.eventName,
             eventSub_name: ticket.eventSub_name,
             eventDate: ticket.eventDate,
