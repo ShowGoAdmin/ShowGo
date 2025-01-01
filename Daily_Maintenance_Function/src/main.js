@@ -1,5 +1,6 @@
 import { Client } from 'node-appwrite';
-import {Databases} from 'node-appwrite';
+import { Databases } from 'node-appwrite';
+import { Query } from 'node-appwrite'
  
 
 // Initialize Appwrite Client
@@ -94,10 +95,12 @@ async function deleteExpiredInstantSaleTickets() {
         await database.updateDocument(
           databaseId,
           ticketsCollectionId, 
-          originalTicketId, {
-          quantity: updatedQuantity,
-          isListedForSale: false,
-        });
+          originalTicketId, 
+          {
+            quantity: updatedQuantity,
+            isListedForSale: false,
+          }
+      );
 
         console.log(`Updated original ticket with ID: ${originalTicketId}, new quantity: ${updatedQuantity}`);
 
@@ -141,7 +144,21 @@ async function moveExpiredTickets() {
         await database.createDocument(
           databaseId,
           expiredTicketsCollectionId, 
-          ticket
+          {
+            eventName: ticket.eventName,
+            eventSub_name: ticket.eventSub_name,
+            eventDate: ticket.eventDate,
+            eventTime: ticket.eventTime,
+            eventLocation: ticket.eventLocation,
+            price: ticket.price,
+            imageFileId: ticket.imageFileId,
+            category: ticket.category,
+            userId: ticket.userId,
+            eventId: ticket.eventId,
+            qrCodeFileId: ticket.qrCodeFileId,
+            quantity: ticket.quantity,
+            isListedForSale: ticket.isListedForSale,
+          }
         );
         await database.deleteDocument(
           databaseId,
