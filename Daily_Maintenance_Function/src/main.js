@@ -85,14 +85,16 @@ async function deleteExpiredInstantSaleTickets() {
 
       if (expiryDate < currentDate) {
         const originalTicketId = ticket.ticketId;
-        const listingQuantity = ticket.quantity;
+        const listingQuantity = parseInt(ticket.quantity, 10); //convert this string number quantity to integer type 
+
 
         const originalTicket = await database.getDocument(
           databaseId,
           ticketsCollectionId, 
-          originalTicketId);
+          originalTicketId
+        );
 
-        const updatedQuantity = originalTicket.quantity + listingQuantity;
+        const updatedQuantity = parseInt(originalTicket.quantity, 10) + listingQuantity;
         await database.updateDocument(
           databaseId,
           ticketsCollectionId, 
