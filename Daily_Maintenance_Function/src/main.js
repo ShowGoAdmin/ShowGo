@@ -148,7 +148,6 @@ async function moveExpiredTickets() {
         await database.createDocument(
           databaseId, 
           expiredTicketsCollectionId, 
-          ID.unique(),
           ticket
         );
         await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
