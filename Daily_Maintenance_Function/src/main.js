@@ -142,19 +142,19 @@ async function moveExpiredTickets() {
 
       if (eventDate < currentDate) {
         const documentData = {
-          eventName: ticket.eventName || '',
-          eventSub_name: ticket.eventSub_name || '',
-          eventDate: ticket.eventDate || '',
-          eventTime: ticket.eventTime || '',
-          eventLocation: ticket.eventLocation || '',
-          price: ticket.price || 0,
-          imageFileId: ticket.imageFileId || '',
-          category: ticket.category || '',
-          userId: ticket.userId || '',
-          eventId: ticket.eventId || '',
-          qrCodeFileId: ticket.qrCodeFileId || '',
-          quantity: ticket.quantity || 0,
-          isListedForSale: !!ticket.isListedForSale,
+          eventName: ticket.eventName,
+          eventSub_name: ticket.eventSub_name,
+          eventDate: ticket.eventDate,
+          eventTime: ticket.eventTime,
+          eventLocation: ticket.eventLocation,
+          price: ticket.price,
+          imageFileId: ticket.imageFileI,
+          category: ticket.category,
+          userId: ticket.userId,
+          eventId: ticket.eventId,
+          qrCodeFileId: ticket.qrCodeFileId,
+          quantity: ticket.quantity,
+          isListedForSale: ticket.isListedForSale,
         };
 
         console.log('Creating document with data:', documentData);
