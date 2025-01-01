@@ -72,7 +72,8 @@ async function deleteExpiredInstantSaleTickets() {
 
     const tickets = await database.listDocuments(
       databaseId,
-      ticketsForInstantSaleCollectionId);
+      ticketsForInstantSaleCollectionId
+    );
 
     for (let ticket of tickets.documents) {
       const expiryDateStr = ticket.expiry;
@@ -98,7 +99,7 @@ async function deleteExpiredInstantSaleTickets() {
           originalTicketId, 
           {
             quantity: updatedQuantity,
-            isListedForSale: false,
+            isListedForSale: "false",
           }
       );
 
@@ -122,50 +123,44 @@ async function moveExpiredTickets() {
   try {
     const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
     const expiredTicketsCollectionId = process.env.EXPIRED_TICKETS_COLLECTION_ID;
-    const databaseId = process.env.DATABASE_ID
+    const databaseId = process.env.DATABASE_ID;
 
-    if (!ticketsCollectionId || !expiredTicketsCollectionId) {
-      throw new Error('Missing collection IDs in environment variables');
+    if (!ticketsCollectionId || !expiredTicketsCollectionId || !databaseId) {
+      throw new Error('Missing collection IDs or database ID in environment variables');
     }
 
-    const tickets = await database.listDocuments(
-      databaseId,
-      ticketsCollectionId
-    );
+    const tickets = await database.listDocuments(databaseId, ticketsCollectionId);
 
     for (let ticket of tickets.documents) {
       const eventDateStr = ticket.eventDate;
       const eventDate = new Date(eventDateStr);
       const currentDate = new Date();
 
-      console.log(`Ticket Data :${ticket}`)
+      console.log('Processing ticket:', ticket);
 
       if (eventDate < currentDate) {
-        await database.createDocument(
-          databaseId,
-          expiredTicketsCollectionId, 
-          data = {
-            eventName: ticket.eventName,
-            eventSub_name: ticket.eventSub_name,
-            eventDate: ticket.eventDate,
-            eventTime: ticket.eventTime,
-            eventLocation: ticket.eventLocation,
-            price: ticket.price,
-            imageFileId: ticket.imageFileId,
-            category: ticket.category,
-            userId: ticket.userId,
-            eventId: ticket.eventId,
-            qrCodeFileId: ticket.qrCodeFileId,
-            quantity: ticket.quantity,
-            isListedForSale: ticket.isListedForSale,
-          }
-        );
-        await database.deleteDocument(
-          databaseId,
-          ticketsCollectionId, 
-          ticket.$id
-        );
-        console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets.`);
+        const documentData = {
+          eventName: ticket.eventName || '',
+          eventSub_name: ticket.eventSub_name || '',
+          eventDate: ticket.eventDate || '',
+          eventTime: ticket.eventTime || '',
+          eventLocation: ticket.eventLocation || '',
+          price: ticket.price || 0,
+          imageFileId: ticket.imageFileId || '',
+          category: ticket.category || '',
+          userId: ticket.userId || '',
+          eventId: ticket.eventId || '',
+          qrCodeFileId: ticket.qrCodeFileId || '',
+          quantity: ticket.quantity || 0,
+          isListedForSale: !!ticket.isListedForSale,
+        };
+
+        console.log('Creating document with data:', documentData);
+
+        await database.createDocument(databaseId, expiredTicketsCollectionId, documentData);
+        await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
+
+        console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets collection.`);
       }
     }
   } catch (error) {
