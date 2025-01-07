@@ -138,7 +138,7 @@ async function moveExpiredTickets() {
       const eventDate = new Date(eventDateStr);
       const currentDate = new Date();
 
-      console.log('Processing ticket:', ticket);
+      console.log('Processing expired ticket:', ticket);
 
       if (eventDate < currentDate) {
         
@@ -148,6 +148,7 @@ async function moveExpiredTickets() {
         await database.createDocument(
           databaseId, 
           expiredTicketsCollectionId, 
+          ID.unique(),
           ticket
         );
         await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
