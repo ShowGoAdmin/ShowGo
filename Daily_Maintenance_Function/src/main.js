@@ -138,16 +138,20 @@ async function moveExpiredTickets() {
       const eventDate = new Date(eventDateStr);
       const currentDate = new Date();
 
-      console.log('Processing expired ticket:', ticket);
+      console.log('Processing ticket:', ticket);
+
+      // Skip if the event date is invalid
+      if (isNaN(eventDate)) {
+        console.error('Invalid event date:', eventDateStr);
+        continue;
+      }
 
       if (eventDate < currentDate) {
-        
-
         console.log('Creating document with data:', ticket);
 
         const ticketData = {
           "eventName": ticket.eventName,
-          "eventSub_name": ticket.eventSubName,
+          "eventSub_name": ticket.eventSub_name,
           "eventDate": ticket.eventDate,
           "eventTime": ticket.eventTime,
           "eventLocation": ticket.eventLocation,
@@ -159,14 +163,17 @@ async function moveExpiredTickets() {
           "qrCodeFileId": ticket.qrCodeFileId,
           "quantity": ticket.quantity,
           "isListedForSale": ticket.isListedForSale.toString() // Convert boolean to string
-      };
+        };
 
-        await database.createDocument(
+        // Create document in expired tickets collection
+        const response = await database.createDocument(
           databaseId, 
           expiredTicketsCollectionId, 
-          ID.unique(),
+          sdk.ID.unique(),
           ticketData
         );
+
+        // Delete document from tickets collection
         await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
 
         console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets collection.`);
