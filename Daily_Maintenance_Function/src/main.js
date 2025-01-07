@@ -146,19 +146,19 @@ async function moveExpiredTickets() {
         console.log('Creating document with data:', ticket);
 
         const ticketData = {
-          eventName: ticket.eventName,
-          eventSub_name: ticket.eventSubName,
-          eventDate: ticket.eventDate,
-          eventTime: ticket.eventTime,
-          eventLocation: ticket.eventLocation,
-          price: ticket.price,
-          imageFileId: ticket.imageFileId,
-          category: ticket.category,
-          userId: ticket.userId,
-          eventId: ticket.eventId,
-          qrCodeFileId: ticket.qrCodeFileId,
-          quantity: ticket.quantity,
-          isListedForSale: ticket.isListedForSale.toString() // Convert boolean to string
+          "eventName": ticket.eventName,
+          "eventSub_name": ticket.eventSubName,
+          "eventDate": ticket.eventDate,
+          "eventTime": ticket.eventTime,
+          "eventLocation": ticket.eventLocation,
+          "price": ticket.price,
+          "imageFileId": ticket.imageFileId,
+          "category": ticket.category,
+          "userId": ticket.userId,
+          "eventId": ticket.eventId,
+          "qrCodeFileId": ticket.qrCodeFileId,
+          "quantity": ticket.quantity,
+          "isListedForSale": ticket.isListedForSale.toString() // Convert boolean to string
       };
 
         await database.createDocument(
