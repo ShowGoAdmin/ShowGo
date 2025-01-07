@@ -169,7 +169,7 @@ async function moveExpiredTickets() {
         const response = await database.createDocument(
           databaseId, 
           expiredTicketsCollectionId, 
-          sdk.ID.unique(),
+          ID.unique(),
           ticketData
         );
 
