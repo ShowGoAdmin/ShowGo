@@ -219,7 +219,7 @@ async function moveExpiredEvents() {
           "sub_name": event.sub_name,
           "date": event.date,
           "price": event.price,
-          "eventLocation_Lat_Lng_VenueName": event.eventLocation_Lat_Lng,
+          "eventLocation_Lat_Lng_VenueName": event.eventLocation_Lat_Lng_VenueName,
           "organiserId": event.organiserId,
           "eventInfo": event.eventInfo,
           "totalTickets": event.totalTickets,
