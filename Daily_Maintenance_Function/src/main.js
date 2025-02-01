@@ -185,22 +185,22 @@ async function moveExpiredTickets() {
 }
 async function moveExpiredEvents() {
   try {
-    const EventsCollectionId = process.env.Event_ID;
+    const eventsCollectionId = process.env.Event_ID;
     const expiredEventsCollectionId = process.env.Expired_Events_ID;
     const databaseId = process.env.DATABASE_ID;
 
-    if (!ticketsCollectionId || !expiredTicketsCollectionId || !databaseId) {
+    if (!eventsCollectionId || !expiredEventsCollectionId || !databaseId) {
       throw new Error('Missing collection IDs or database ID in environment variables');
     }
 
-    const tickets = await database.listDocuments(databaseId, ticketsCollectionId);
+    const events = await database.listDocuments(databaseId, eventsCollectionId);
 
-    for (let ticket of tickets.documents) {
-      const eventDateStr = ticket.eventDate;
+    for (let event of events.documents) {
+      const eventDateStr = event.date;
       const eventDate = new Date(eventDateStr);
       const currentDate = new Date();
 
-      console.log('Processing ticket:', ticket);
+      console.log('Processing event:', event);
 
       // Skip if the event date is invalid
       if (isNaN(eventDate)) {
@@ -209,40 +209,42 @@ async function moveExpiredEvents() {
       }
 
       if (eventDate < currentDate) {
-        console.log('Creating document with data:', ticket);
+        console.log('Creating document with data:', event);
 
-        const ticketData = {
-          "eventName": ticket.eventName,
-          "eventSub_name": ticket.eventSub_name,
-          "eventDate": ticket.eventDate,
-          "eventTime": ticket.eventTime,
-          "eventLocation": ticket.eventLocation,
-          "price": ticket.price,
-          "imageFileId": ticket.imageFileId,
-          "category": ticket.category,
-          "userId": ticket.userId,
-          "eventId": ticket.eventId,
-          "qrCodeFileId": ticket.qrCodeFileId,
-          "quantity": ticket.quantity,
-          "isListedForSale": ticket.isListedForSale.toString() // Convert boolean to string
+        const eventData = {
+          "name": event.name,
+          "location": event.location,
+          "imageField": event.imageField,
+          "time": event.time,
+          "sub_name": event.sub_name,
+          "date": event.date,
+          "price": event.price,
+          "eventLocation_Lat_Lng": event.eventLocation_Lat_Lng,
+          "organiserId": event.organiserId,
+          "eventInfo": event.eventInfo,
+          "totalTickets": event.totalTickets,
+          "ticketsLeft": event.ticketsLeft,
+          "tags": event.tags || [],
+          "phase": event.phase || [],
+          "categories": event.categories || []
         };
 
-        // Create document in expired tickets collection
+        // Create document in expired events collection
         const response = await database.createDocument(
           databaseId, 
-          expiredTicketsCollectionId, 
+          expiredEventsCollectionId, 
           ID.unique(),
-          ticketData
+          eventData
         );
 
-        // Delete document from tickets collection
-        await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
+        // Delete document from events collection
+        await database.deleteDocument(databaseId, eventsCollectionId, event.$id);
 
-        console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets collection.`);
+        console.log(`Moved event with ID: ${event.$id} to expired events collection.`);
       }
     }
   } catch (error) {
-    console.error('Error moving expired tickets:', error);
+    console.error('Error moving expired events:', error);
   }
 }
 
@@ -255,7 +257,7 @@ export default async ({ req, res, log, error }) => {
     await deleteChatMessages();
     await moveExpiredTickets();
     await deleteExpiredInstantSaleTickets();
-
+    await moveExpiredEvents();
     // Send success response
     return res.json({
       message: 'Scheduled tasks completed successfully.',
