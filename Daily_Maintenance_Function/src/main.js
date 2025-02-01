@@ -147,7 +147,7 @@ async function moveExpiredTickets() {
         continue;
       }
 
-      if ((eventDate < currentDate) || (ticketQty === "0")) {
+      if (eventDate < currentDate) {
 
         console.log('Creating document with data:', ticket);
 
@@ -181,6 +181,13 @@ async function moveExpiredTickets() {
         await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
 
         console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets collection.`);
+      }
+      else if  (ticketQty === "0") {
+        await database.deleteDocument(
+          databaseId,
+          ticketsCollectionId, 
+          ticket.$id
+        );
       }
     }
   } catch (error) {
