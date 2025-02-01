@@ -183,6 +183,68 @@ async function moveExpiredTickets() {
     console.error('Error moving expired tickets:', error);
   }
 }
+async function moveExpiredEvents() {
+  try {
+    const EventsCollectionId = process.env.Event_ID;
+    const expiredEventsCollectionId = process.env.Expired_Events_ID;
+    const databaseId = process.env.DATABASE_ID;
+
+    if (!ticketsCollectionId || !expiredTicketsCollectionId || !databaseId) {
+      throw new Error('Missing collection IDs or database ID in environment variables');
+    }
+
+    const tickets = await database.listDocuments(databaseId, ticketsCollectionId);
+
+    for (let ticket of tickets.documents) {
+      const eventDateStr = ticket.eventDate;
+      const eventDate = new Date(eventDateStr);
+      const currentDate = new Date();
+
+      console.log('Processing ticket:', ticket);
+
+      // Skip if the event date is invalid
+      if (isNaN(eventDate)) {
+        console.error('Invalid event date:', eventDateStr);
+        continue;
+      }
+
+      if (eventDate < currentDate) {
+        console.log('Creating document with data:', ticket);
+
+        const ticketData = {
+          "eventName": ticket.eventName,
+          "eventSub_name": ticket.eventSub_name,
+          "eventDate": ticket.eventDate,
+          "eventTime": ticket.eventTime,
+          "eventLocation": ticket.eventLocation,
+          "price": ticket.price,
+          "imageFileId": ticket.imageFileId,
+          "category": ticket.category,
+          "userId": ticket.userId,
+          "eventId": ticket.eventId,
+          "qrCodeFileId": ticket.qrCodeFileId,
+          "quantity": ticket.quantity,
+          "isListedForSale": ticket.isListedForSale.toString() // Convert boolean to string
+        };
+
+        // Create document in expired tickets collection
+        const response = await database.createDocument(
+          databaseId, 
+          expiredTicketsCollectionId, 
+          ID.unique(),
+          ticketData
+        );
+
+        // Delete document from tickets collection
+        await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
+
+        console.log(`Moved ticket with ID: ${ticket.$id} to expired tickets collection.`);
+      }
+    }
+  } catch (error) {
+    console.error('Error moving expired tickets:', error);
+  }
+}
 
 // Main function for Appwrite execution
 export default async ({ req, res, log, error }) => {
