@@ -211,50 +211,43 @@ async function moveExpiredEvents() {
       if (eventDate < currentDate) {
         console.log('Creating document with data:', event);
 
-        // Ensure the eventLocation_Lat_Lng_VenueName is properly formatted
-        const eventLocation = event.eventLocation_Lat_Lng_VenueName ? 
-          event.eventLocation_Lat_Lng_VenueName.trim() : '';
-
         const eventData = {
-          name: event.name || '',
-          location: event.location || '',
-          imageFileId: event.imageFileId || '',
-          time: event.time || '',
-          sub_name: event.sub_name || '',
-          date: event.date || '',
-          price: event.price || '',
-          eventLocation_Lat_Lng_VenueName: eventLocation,
-          organiserId: event.organiserId || '',
-          eventInfo: event.eventInfo || '',
-          totalTickets: event.totalTickets || '0',
-          ticketsLeft: event.ticketsLeft || '0',
-          tags: Array.isArray(event.tags) ? event.tags : [],
-          phase: Array.isArray(event.phase) ? event.phase : [],
-          categories: Array.isArray(event.categories) ? event.categories : []
+          "name": event.name,
+          "location": event.location,
+          "imageFileId": event.imageFileId,
+          "time": event.time,
+          "sub_name": event.sub_name,
+          "date": event.date,
+          "price": event.price,
+          "eventLocation_Lat_Lng_VenueName": event.eventLocation_Lat_Lng_VenueName,
+          "organiserId": event.organiserId,
+          "eventInfo": event.eventInfo,
+          "totalTickets": event.totalTickets,
+          "ticketsLeft": event.ticketsLeft,
+          "tags": event.tags || [],
+          "phase": event.phase || [],
+          "categories": event.categories || []
         };
 
-        try {
-          // Create document in expired events collection
-          const response = await database.createDocument(
-            databaseId, 
-            expiredEventsCollectionId, 
-            ID.unique(),
-            eventData
-          );
+        // Create document in expired events collection
+        const response = await database.createDocument(
+          databaseId, 
+          expiredEventsCollectionId, 
+          ID.unique(),
+          eventData
+        );
 
-          // Only delete the original document if the new one was created successfully
-          await database.deleteDocument(databaseId, eventsCollectionId, event.$id);
-          console.log(`Moved event with ID: ${event.$id} to expired events collection.`);
-        } catch (createError) {
-          console.error('Error creating expired event document:', createError);
-          console.error('Problematic event data:', eventData);
-        }
+        // Delete document from events collection
+        await database.deleteDocument(databaseId, eventsCollectionId, event.$id);
+
+        console.log(`Moved event with ID: ${event.$id} to expired events collection.`);
       }
     }
   } catch (error) {
     console.error('Error moving expired events:', error);
   }
 }
+
 // Main function for Appwrite execution
 export default async ({ req, res, log, error }) => {
   try {
