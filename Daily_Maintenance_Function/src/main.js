@@ -150,19 +150,21 @@ async function moveExpiredTickets() {
         console.log('Creating document with data:', ticket);
 
         const ticketData = {
-          "eventName": ticket.eventName,
-          "eventSub_name": ticket.eventSub_name,
-          "eventDate": ticket.eventDate,
-          "eventTime": ticket.eventTime,
-          "eventLocation": ticket.eventLocation,
-          "price": ticket.price,
-          "imageFileId": ticket.imageFileId,
-          "category": ticket.category,
-          "userId": ticket.userId,
-          "eventId": ticket.eventId,
-          "qrCodeFileId": ticket.qrCodeFileId,
-          "quantity": ticket.quantity,
-          "isListedForSale": ticket.isListedForSale.toString() // Convert boolean to string
+          "name": event.name,
+          "location": event.location,
+          "imageField": event.imageField,
+          "time": event.time,
+          "sub_name": event.sub_name,
+          "date": event.date,
+          "price": event.price,
+          "eventLocation_Lat_Lng": event.eventLocation_Lat_Lng,
+          "organiserId": event.organiserId,
+          "eventInfo": event.eventInfo,
+          "totalTickets": event.totalTickets,
+          "ticketsLeft": event.ticketsLeft,
+          "tags": event.tags || [],
+          "phase": event.phase || [],
+          "categories": event.categories || []
         };
 
         // Create document in expired tickets collection
