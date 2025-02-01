@@ -214,7 +214,7 @@ async function moveExpiredEvents() {
         const eventData = {
           "name": event.name,
           "location": event.location,
-          "imageFileId": event.imageField,
+          "imageFileId": event.imageFileId,
           "time": event.time,
           "sub_name": event.sub_name,
           "date": event.date,
