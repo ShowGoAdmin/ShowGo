@@ -135,6 +135,7 @@ async function moveExpiredTickets() {
 
     for (let ticket of tickets.documents) {
       const eventDateStr = ticket.eventDate;
+      const ticketQty = ticket.quantity;
       const eventDate = new Date(eventDateStr);
       const currentDate = new Date();
 
@@ -146,7 +147,8 @@ async function moveExpiredTickets() {
         continue;
       }
 
-      if (eventDate < currentDate) {
+      if ((eventDate < currentDate) || (ticketQty === "0")) {
+
         console.log('Creating document with data:', ticket);
 
         const ticketData = {
@@ -155,14 +157,16 @@ async function moveExpiredTickets() {
           "eventDate": ticket.eventDate,
           "eventTime": ticket.eventTime,
           "eventLocation": ticket.eventLocation,
-          "price": ticket.price,
+          "totalAmountPaid": ticket.totalAmountPaid,
           "imageFileId": ticket.imageFileId,
           "category": ticket.category,
           "userId": ticket.userId,
           "eventId": ticket.eventId,
           "qrCodeFileId": ticket.qrCodeFileId,
           "quantity": ticket.quantity,
-          "isListedForSale": ticket.isListedForSale.toString() // Convert boolean to string
+          "isListedForSale": ticket.isListedForSale.toString(), // Convert boolean to string
+          "checkedIn": ticket.checkedIn,
+          "pricePerTicket": ticket.pricePerTicket
         };
 
         // Create document in expired tickets collection
