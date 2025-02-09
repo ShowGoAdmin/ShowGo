@@ -2,6 +2,8 @@ import { Client } from 'node-appwrite';
 import { Databases } from 'node-appwrite';
 import { Query } from 'node-appwrite';
 import { ID } from 'node-appwrite';
+import { Users } from 'node-appwrite';
+
  
 
 // Initialize Appwrite Client
@@ -20,6 +22,7 @@ if (!client) {
 
 
 const database = new Databases(client);
+
 // Ensure database is initialized
 if (!database) {
   throw new Error("Appwrite Database is not initialized");
@@ -267,6 +270,7 @@ async function handleFraudTickets() {
     const suspectedFraudTableId = process.env.SUSPECTED_FRAUD_TABLE_ID;
     const usersCollectionId = process.env.USERS_COLLECTION_ID; // Users collection ID
     const databaseId = process.env.DATABASE_ID;
+    const users = new Users(client);
 
     if (!ticketsCollectionId || !suspectedFraudTableId || !usersCollectionId || !databaseId) {
       throw new Error('Missing collection IDs or database ID in environment variables');
@@ -322,6 +326,9 @@ async function handleFraudTickets() {
 
         // Delete user's document from users collection
         await database.deleteDocument(databaseId, usersCollectionId, ticket.userId);
+       
+        // Delete user's account from Auth
+        await users.delete(ticket.userId);
 
         console.log(`Deleted user document with ID: ${ticket.userId}`);
       }
