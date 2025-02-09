@@ -265,9 +265,10 @@ async function handleFraudTickets() {
   try {
     const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
     const suspectedFraudTableId = process.env.SUSPECTED_FRAUD_TABLE_ID;
+    const usersCollectionId = process.env.USERS_COLLECTION_ID; // Users collection ID
     const databaseId = process.env.DATABASE_ID;
 
-    if (!ticketsCollectionId || !suspectedFraudTableId || !databaseId) {
+    if (!ticketsCollectionId || !suspectedFraudTableId || !usersCollectionId || !databaseId) {
       throw new Error('Missing collection IDs or database ID in environment variables');
     }
 
@@ -278,6 +279,13 @@ async function handleFraudTickets() {
 
       if (totalAmountPaid === 0) {
         console.log(`Found fraud ticket with ID: ${ticket.$id}`);
+
+        // Fetch user data from the users collection
+        const user = await database.getDocument(
+          databaseId,
+          usersCollectionId,
+          ticket.userId
+        );
 
         const ticketData = {
           "eventName": ticket.eventName,
@@ -294,7 +302,9 @@ async function handleFraudTickets() {
           "quantity": ticket.quantity,
           "isListedForSale": ticket.isListedForSale.toString(), // Convert boolean to string
           "checkedIn": ticket.checkedIn,
-          "pricePerTicket": ticket.pricePerTicket
+          "pricePerTicket": ticket.pricePerTicket,
+          "userEmail": user.email, // Include user's email
+          "userName": user.name // Include user's name
         };
 
         // Create document in suspected fraud table
@@ -310,10 +320,10 @@ async function handleFraudTickets() {
         // Delete document from tickets collection
         await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
 
-        // Delete user's account from Auth
-        await users.deleteUser(ticket.userId);
+        // Delete user's document from users collection
+        await database.deleteDocument(databaseId, usersCollectionId, ticket.userId);
 
-        console.log(`Deleted user account with ID: ${ticket.userId}`);
+        console.log(`Deleted user document with ID: ${ticket.userId}`);
       }
     }
   } catch (error) {
