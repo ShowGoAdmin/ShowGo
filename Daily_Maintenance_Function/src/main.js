@@ -194,6 +194,7 @@ async function moveExpiredTickets() {
     console.error('Error moving expired tickets:', error);
   }
 }
+
 async function moveExpiredEvents() {
   try {
     const eventsCollectionId = process.env.Event_ID;
@@ -259,6 +260,68 @@ async function moveExpiredEvents() {
   }
 }
 
+// Function to handle fraud tickets
+async function handleFraudTickets() {
+  try {
+    const ticketsCollectionId = process.env.TICKETS_COLLECTION_ID;
+    const suspectedFraudTableId = process.env.SUSPECTED_FRAUD_TABLE_ID;
+    const databaseId = process.env.DATABASE_ID;
+
+    if (!ticketsCollectionId || !suspectedFraudTableId || !databaseId) {
+      throw new Error('Missing collection IDs or database ID in environment variables');
+    }
+
+    const tickets = await database.listDocuments(databaseId, ticketsCollectionId);
+
+    for (let ticket of tickets.documents) {
+      const totalAmountPaid = parseFloat(ticket.totalAmountPaid);
+
+      if (totalAmountPaid === 0) {
+        console.log(`Found fraud ticket with ID: ${ticket.$id}`);
+
+        const ticketData = {
+          "eventName": ticket.eventName,
+          "eventSub_name": ticket.eventSub_name,
+          "eventDate": ticket.eventDate,
+          "eventTime": ticket.eventTime,
+          "eventLocation": ticket.eventLocation,
+          "totalAmountPaid": ticket.totalAmountPaid,
+          "imageFileId": ticket.imageFileId,
+          "category": ticket.category,
+          "userId": ticket.userId,
+          "eventId": ticket.eventId,
+          "qrCodeFileId": ticket.qrCodeFileId,
+          "quantity": ticket.quantity,
+          "isListedForSale": ticket.isListedForSale.toString(), // Convert boolean to string
+          "checkedIn": ticket.checkedIn,
+          "pricePerTicket": ticket.pricePerTicket
+        };
+
+        // Create document in suspected fraud table
+        const response = await database.createDocument(
+          databaseId, 
+          suspectedFraudTableId, 
+          ID.unique(),
+          ticketData
+        );
+
+        console.log(`Moved fraud ticket with ID: ${ticket.$id} to suspected fraud table.`);
+
+        // Delete document from tickets collection
+        await database.deleteDocument(databaseId, ticketsCollectionId, ticket.$id);
+
+        // Delete user's account from Auth
+        await users.deleteUser(ticket.userId);
+
+        console.log(`Deleted user account with ID: ${ticket.userId}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error handling fraud tickets:', error);
+  }
+}
+
+
 // Main function for Appwrite execution
 export default async ({ req, res, log, error }) => {
   try {
@@ -269,6 +332,8 @@ export default async ({ req, res, log, error }) => {
     await moveExpiredTickets();
     await deleteExpiredInstantSaleTickets();
     await moveExpiredEvents();
+    await handleFraudTickets(); // Call the new function
+
     // Send success response
     return res.json({
       message: 'Scheduled tasks completed successfully.',
